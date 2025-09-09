@@ -6,7 +6,8 @@ const ExpenseForm = ({ onSubmit, initialData = {}, isEditing = false }) => {
     category: initialData.category || 'Food',
     description: initialData.description || '',
     date: initialData.date ? new Date(initialData.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-    isRegular: initialData.isRegular || false
+    isRegular: initialData.isRegular || false,
+    proof: null
   });
 
   const [errors, setErrors] = useState({});
@@ -23,11 +24,15 @@ const ExpenseForm = ({ onSubmit, initialData = {}, isEditing = false }) => {
   ];
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value
-    });
+    const { name, value, type, checked, files } = e.target;
+    if (name === 'proof') {
+      setFormData({ ...formData, [name]: files[0] });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: type === 'checkbox' ? checked : value
+      });
+    }
   };
 
   const validate = () => {
@@ -55,13 +60,8 @@ const ExpenseForm = ({ onSubmit, initialData = {}, isEditing = false }) => {
     if (validate()) {
       try {
         setLoading(true);
-        // Convert amount to number
-        const submissionData = {
-          ...formData,
-          amount: parseFloat(formData.amount)
-        };
-        
-        await onSubmit(submissionData);
+        // Send as JSON since there are no file uploads
+        await onSubmit(formData);
       } catch (error) {
         console.error('Error submitting form:', error);
       } finally {
@@ -136,6 +136,19 @@ const ExpenseForm = ({ onSubmit, initialData = {}, isEditing = false }) => {
         />
         {errors.date && <p className="text-red-500 text-xs italic mt-1">{errors.date}</p>}
       </div>
+
+      {/* <div>
+        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="proof">
+          Proof / Receipt (Optional)
+        </label>
+        <input
+          className="shadow appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          id="proof"
+          name="proof"
+          type="file"
+          onChange={handleChange}
+        />
+      </div> */}
       
       <div className="flex items-center">
         <input

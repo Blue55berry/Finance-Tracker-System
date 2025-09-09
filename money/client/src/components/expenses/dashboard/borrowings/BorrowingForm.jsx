@@ -7,23 +7,18 @@ const BorrowingForm = ({ onSubmit, initialData = {}, isEditing = false }) => {
     description: initialData.description || '',
     date: initialData.date ? new Date(initialData.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     dueDate: initialData.dueDate ? new Date(initialData.dueDate).toISOString().split('T')[0] : '',
-    paymentMethod: initialData.paymentMethod || 'Cash',
-    proof: null
+    paymentMethod: initialData.paymentMethod || 'Cash'
   });
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === 'proof') {
-      setFormData({ ...formData, [name]: files[0] });
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value
-      });
-    }
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
   };
 
   const validate = () => {
@@ -51,12 +46,8 @@ const BorrowingForm = ({ onSubmit, initialData = {}, isEditing = false }) => {
     if (validate()) {
       try {
         setLoading(true);
-        const submissionData = new FormData();
-        for (const key in formData) {
-          submissionData.append(key, formData[key]);
-        }
-        
-        await onSubmit(submissionData);
+        // No need for FormData if no files are being uploaded
+        await onSubmit(formData);
       } catch (error) {
         console.error('Error submitting form:', error);
       } finally {
@@ -66,7 +57,7 @@ const BorrowingForm = ({ onSubmit, initialData = {}, isEditing = false }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4" encType="multipart/form-data">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="amount">
           Amount
@@ -160,21 +151,6 @@ const BorrowingForm = ({ onSubmit, initialData = {}, isEditing = false }) => {
           <option value="Other">Other</option>
         </select>
       </div>
-
-      {formData.paymentMethod === 'Online' && (
-        <div>
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="proof">
-            Proof of Payment
-          </label>
-          <input
-            className="shadow appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            id="proof"
-            name="proof"
-            type="file"
-            onChange={handleChange}
-          />
-        </div>
-      )}
       
       <div className="flex items-center justify-end">
         <button

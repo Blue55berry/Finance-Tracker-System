@@ -45,7 +45,7 @@ const Dashboard = () => {
           weeklySpending: weeklySummary.dailyExpenses
         });
         
-        setRecentExpenses(expenses);
+        setRecentExpenses(expenses.expenses);
         setBorrowings(borrowingsData);
         
       } catch (err) {

@@ -104,9 +104,9 @@ const Register = () => {
                 name="name"
                 type="text"
                 autoComplete="name"
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
+                className={`appearance-none rounded-none relative block w-full px-3 py-2 border mb-2 rounded-xl  ${
                   formErrors.name ? 'border-red-300' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
+                } placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="Full Name"
                 value={formData.name}
                 onChange={handleChange}
@@ -122,9 +122,9 @@ const Register = () => {
                 name="email"
                 type="email"
                 autoComplete="email"
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
+                className={`appearance-none rounded-none relative block w-full px-3 py-2 border mb-2  ${
                   formErrors.email ? 'border-red-300' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
+                } placeholder-gray-500 text-gray-900 focus:outline-none rounded-xl focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="Email address"
                 value={formData.email}
                 onChange={handleChange}
@@ -140,9 +140,9 @@ const Register = () => {
                 name="password"
                 type="password"
                 autoComplete="new-password"
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
+                className={`appearance-none rounded-none relative block w-full px-3 py-2 border mb-2 ${
                   formErrors.password ? 'border-red-300' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
+                } placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleChange}
@@ -160,7 +160,7 @@ const Register = () => {
                 autoComplete="new-password"
                 className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
                   formErrors.confirmPassword ? 'border-red-300' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
+                } placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="Confirm Password"
                 value={formData.confirmPassword}
                 onChange={handleChange}

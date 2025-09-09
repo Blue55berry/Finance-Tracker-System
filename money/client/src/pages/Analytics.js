@@ -66,6 +66,7 @@ const Analytics = () => {
       const startDate = dateRange.startDate.toISOString();
       const endDate = dateRange.endDate.toISOString();
 
+      console.log('Fetching analytics data...');
       const results = await Promise.allSettled([
         expenseService.getExpensesByCategory(startDate, endDate),
         expenseService.getExpensesByDay(startDate, endDate),
@@ -74,6 +75,7 @@ const Analytics = () => {
         expenseService.getExpenses({ limit: 5 }),
         borrowingService.getBorrowings({ limit: 5 })
       ]);
+      console.log('Promise.allSettled results:', results);
 
       const [
         categoryDataResult,
@@ -86,6 +88,8 @@ const Analytics = () => {
 
       if (categoryDataResult.status === 'fulfilled') {
         setExpensesData(prev => ({ ...prev, byCategory: categoryDataResult.value }));
+      } else {
+        console.error('expenseService.getExpensesByCategory rejected:', categoryDataResult.reason);
       }
 
       if (dailyDataResult.status === 'fulfilled') {
@@ -93,14 +97,20 @@ const Analytics = () => {
         setExpensesData(prev => ({ ...prev, byDay: dailyData }));
         const total = dailyData.reduce((total, day) => total + day.totalAmount, 0);
         setTotalSpent(total);
+      } else {
+        console.error('expenseService.getExpensesByDay rejected:', dailyDataResult.reason);
       }
 
       if (borrowingsResult.status === 'fulfilled') {
         setBorrowingsData(borrowingsResult.value);
+      } else {
+        console.error('borrowingService.getBorrowingsByDate rejected:', borrowingsResult.reason);
       }
 
       if (byLenderResult.status === 'fulfilled') {
         setBorrowingsByLender(byLenderResult.value);
+      } else {
+        console.error('borrowingService.getBorrowingsByLender rejected:', byLenderResult.reason);
       }
 
       if (recentExpensesResult.status === 'fulfilled' && recentBorrowingsResult.status === 'fulfilled') {
@@ -109,19 +119,26 @@ const Analytics = () => {
         const combined = [...recentExpenses, ...recentBorrowings];
         combined.sort((a, b) => new Date(b.date) - new Date(a.date));
         setRecentTransactions(combined.slice(0, 5));
+      } else {
+        if (recentExpensesResult.status === 'rejected') {
+          console.error('expenseService.getExpenses rejected:', recentExpensesResult.reason);
+        }
+        if (recentBorrowingsResult.status === 'rejected') {
+          console.error('borrowingService.getBorrowings rejected:', recentBorrowingsResult.reason);
+        }
       }
 
       const errors = results
         .filter(result => result.status === 'rejected')
-        .map(result => result.reason.message);
+        .map(result => result.reason?.message || result.reason?.toString() || 'Unknown error');
 
       if (errors.length > 0) {
-        setError(errors.join(', '));
+        setError('Error(s) fetching data: ' + errors.join('; '));
       }
 
     } catch (err) {
-      setError('An unexpected error occurred.');
-      console.error('Error in fetchAnalyticsData:', err);
+      setError('An unexpected error occurred. Please check console for details.');
+      console.error('Critical Error in fetchAnalyticsData:', err);
     } finally {
       setLoading(false);
     }

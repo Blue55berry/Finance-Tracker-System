@@ -22,11 +22,7 @@ axiosInstance.interceptors.request.use(
 export const borrowingService = {
   createBorrowing: async (borrowingData) => {
     try {
-      const response = await axiosInstance.post(API_URL, borrowingData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      const response = await axiosInstance.post(API_URL, borrowingData);
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Error creating borrowing record');
@@ -65,14 +61,18 @@ export const borrowingService = {
     }
   },
   
-  markAsRepaid: async (id, repaidDate) => {
-    try {
-      const response = await axiosInstance.patch(`${API_URL}/${id}/repay`, { repaidDate });
-      return response.data;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Error marking borrowing as repaid');
-    }
-  },
+  // markAsRepaid: async (id, repaymentData) => {
+  //   try {
+  //     const response = await axiosInstance.patch(`${API_URL}/${id}/repay`, repaymentData, {
+  //       headers: {
+  //         'Content-Type': 'multipart/form-data'
+  //       }
+  //     });
+  //     return response.data;
+  //   } catch (error) {
+  //     throw new Error(error.response?.data?.message || 'Error marking borrowing as repaid');
+  //   }
+  // },
   
   deleteBorrowing: async (id) => {
     try {

@@ -34,7 +34,7 @@ export const expenseService = {
   getExpenses: async (params = {}) => {
     try {
       const response = await axiosInstance.get(API_URL, { params });
-      return response.data.expenses;
+      return response.data;
     } catch (error) {
       throw new Error(
         error.response?.data?.message || "Error fetching expenses"
