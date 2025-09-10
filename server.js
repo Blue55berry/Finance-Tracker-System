@@ -4,19 +4,21 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const multer = require('multer');
-const path = require('path');
 const http = require('http');
 const { Server } = require("socket.io");
 
 // Load environment variables
 dotenv.config();
 
+// Import upload middleware
+const upload = require('./middleware/upload');
+
 // Import routes
 const authRoutes = require('./routes/auth');
-const expenseRoutes = require('./routes/expenses');
+const expenseRoutes = require('./routes/expenses')(upload);
 const incomeRoutes = require('./routes/income');
 const receiptRoutes = require('./routes/receipts');
+const borrowingRoutes = require('./routes/borrowings')(upload); // Pass upload to borrowing routes
 
 // Create Express app
 const app = express();
@@ -37,23 +39,17 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 
-// Multer storage engine
-const storage = multer.diskStorage({
-  destination: './public/uploads/',
-  filename: function(req, file, cb){
-    cb(null,file.fieldname + '-' + Date.now() + path.extname(file.originalname));
-  }
+// Disable caching for development
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.set('Surrogate-Control', 'no-store');
+  next();
 });
-
-// Init upload
-const upload = multer({
-  storage: storage
-}).single('proof');
 
 // Static folder
 app.use(express.static('./public'));
-
-const borrowingRoutes = require('./routes/borrowings')(upload);
 
 // Routes
 app.use('/api/auth', authRoutes);
