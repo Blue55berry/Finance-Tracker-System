@@ -89,4 +89,4 @@ import React, { useState, useEffect } from 'react';
     );
   };
 
-  export default ProofDetails;ils;
+  export default ProofDetails;
