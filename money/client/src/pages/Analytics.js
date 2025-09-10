@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { expenseService } from '../services/expenseService';
 import { borrowingService } from '../services/borrowingServices';
 import io from 'socket.io-client';
@@ -45,20 +45,7 @@ const Analytics = () => {
   const [totalSpent, setTotalSpent] = useState(0);
   const [recentTransactions, setRecentTransactions] = useState([]);
 
-  useEffect(() => {
-    fetchAnalyticsData();
-
-    const socket = io('http://localhost:5000');
-    socket.on('data-updated', () => {
-      fetchAnalyticsData();
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, [dateRange]);
-
-  const fetchAnalyticsData = async () => {
+  const fetchAnalyticsData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -142,7 +129,20 @@ const Analytics = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [dateRange]);
+
+  useEffect(() => {
+    fetchAnalyticsData();
+
+    const socket = io('http://localhost:5000');
+    socket.on('data-updated', () => {
+      fetchAnalyticsData();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [dateRange, fetchAnalyticsData]);
 
   const handleDateRangeChange = (range) => {
     setDateRange(range);
@@ -181,16 +181,7 @@ const Analytics = () => {
     ]
   };
 
-  const borrowingsByLenderChartData = {
-    labels: borrowingsByLender.map(item => item._id),
-    datasets: [
-      {
-        label: 'Amount Borrowed',
-        data: borrowingsByLender.map(item => item.totalAmount),
-        backgroundColor: 'rgba(153, 102, 255, 0.6)',
-      }
-    ]
-  };
+  
 
   if (loading) {
     return (
