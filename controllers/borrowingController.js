@@ -1,8 +1,16 @@
 const Borrowing = require('../models/Borrowing');
 const Receipt = require('../models/Receipt');
+const path = require('path');
+const mongoose = require('mongoose');
+
+// Helper function to validate ObjectId
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 exports.createBorrowing = async (req, res) => {
   try {
+    if (!req.user || !isValidObjectId(req.user.id)) {
+      return res.status(401).json({ message: 'Unauthorized: Invalid user ID' });
+    }
     const { amount, from, description, date, dueDate, paymentMethod } = req.body;
     
     const borrowing = new Borrowing({
@@ -38,12 +46,16 @@ exports.createBorrowing = async (req, res) => {
 
     res.status(201).json(borrowing);
   } catch (error) {
+    console.error('Error creating borrowing record:', error);
     res.status(500).json({ message: 'Error creating borrowing record', error: error.message });
   }
 };
 
 exports.getAllBorrowings = async (req, res) => {
   try {
+    if (!req.user || !isValidObjectId(req.user.id)) {
+      return res.status(401).json({ message: 'Unauthorized: Invalid user ID' });
+    }
     const { isRepaid } = req.query;
     
     const query = { user: req.user.id };
@@ -55,12 +67,16 @@ exports.getAllBorrowings = async (req, res) => {
     const borrowings = await Borrowing.find(query).sort({ date: -1 });
     res.status(200).json(borrowings);
   } catch (error) {
+    console.error('Error fetching all borrowings:', error);
     res.status(500).json({ message: 'Error fetching borrowings', error: error.message });
   }
 };
 
 exports.getBorrowingById = async (req, res) => {
   try {
+    if (!req.user || !isValidObjectId(req.user.id)) {
+      return res.status(401).json({ message: 'Unauthorized: Invalid user ID' });
+    }
     const borrowing = await Borrowing.findOne({
       _id: req.params.id,
       user: req.user.id
@@ -72,12 +88,16 @@ exports.getBorrowingById = async (req, res) => {
     
     res.status(200).json(borrowing);
   } catch (error) {
+    console.error('Error fetching borrowing by ID:', error);
     res.status(500).json({ message: 'Error fetching borrowing record', error: error.message });
   }
 };
 
 exports.updateBorrowing = async (req, res) => {
   try {
+    if (!req.user || !isValidObjectId(req.user.id)) {
+      return res.status(401).json({ message: 'Unauthorized: Invalid user ID' });
+    }
     const { amount, from, description, date, dueDate } = req.body;
     
     const borrowing = await Borrowing.findOneAndUpdate(
@@ -95,38 +115,67 @@ exports.updateBorrowing = async (req, res) => {
 
     res.status(200).json(borrowing);
   } catch (error) {
+    console.error('Error updating borrowing record:', error);
     res.status(500).json({ message: 'Error updating borrowing record', error: error.message });
   }
 };
 
 exports.markAsRepaid = async (req, res) => {
   try {
+    if (!req.user || !isValidObjectId(req.user.id)) {
+      return res.status(401).json({ message: 'Unauthorized: Invalid user ID' });
+    }
+    const { repaidDate, repaymentNotes } = req.body;
+
+    const updateData = {
+      isRepaid: true,
+      repaidDate: repaidDate || Date.now(),
+      repaymentNotes
+    };
+
+    if (req.file) {
+      updateData.proof = `/uploads/${req.file.filename}`;
+    }
+
     const borrowing = await Borrowing.findOneAndUpdate(
       { _id: req.params.id, user: req.user.id },
-      { 
-        $set: { 
-          isRepaid: true,
-          repaidDate: req.body.repaidDate || Date.now()
-        } 
-      },
+      { $set: updateData },
       { new: true }
     );
     
     if (!borrowing) {
       return res.status(404).json({ message: 'Borrowing record not found' });
     }
+
+    // Create a receipt record
+    const receipt = new Receipt({
+      user: req.user.id,
+      transactionType: 'Borrowing',
+      transactionId: borrowing._id,
+      amount: borrowing.amount,
+      date: borrowing.repaidDate,
+      description: `Repayment for borrowing from ${borrowing.from}`,
+      paymentMethod: borrowing.paymentMethod,
+      proof: borrowing.proof
+    });
+
+    await receipt.save();
     
     const io = req.app.get('io');
     io.emit('data-updated');
 
     res.status(200).json(borrowing);
   } catch (error) {
+    console.error('Error marking as repaid:', error);
     res.status(500).json({ message: 'Error marking as repaid', error: error.message });
   }
 };
 
 exports.deleteBorrowing = async (req, res) => {
   try {
+    if (!req.user || !isValidObjectId(req.user.id)) {
+      return res.status(401).json({ message: 'Unauthorized: Invalid user ID' });
+    }
     const borrowing = await Borrowing.findOneAndDelete({
       _id: req.params.id,
       user: req.user.id
@@ -141,12 +190,16 @@ exports.deleteBorrowing = async (req, res) => {
 
     res.status(200).json({ message: 'Borrowing record deleted successfully' });
   } catch (error) {
+    console.error('Error deleting borrowing record:', error);
     res.status(500).json({ message: 'Error deleting borrowing record', error: error.message });
   }
 };
 
 exports.getBorrowingsByDate = async (req, res) => {
   try {
+    if (!req.user || !isValidObjectId(req.user.id)) {
+      return res.status(401).json({ message: 'Unauthorized: Invalid user ID' });
+    }
     const { startDate, endDate } = req.query;
     
     const query = { user: req.user.id };
@@ -164,6 +217,38 @@ exports.getBorrowingsByDate = async (req, res) => {
     const borrowings = await Borrowing.find(query).sort({ date: -1 });
     res.status(200).json(borrowings);
   } catch (error) {
+    console.error('Error fetching borrowings by date:', error);
     res.status(500).json({ message: 'Error fetching borrowings by date', error: error.message });
+  }
+};
+
+exports.getBorrowingsByLender = async (req, res) => {
+  try {
+    if (!req.user || !isValidObjectId(req.user.id)) {
+      return res.status(401).json({ message: 'Unauthorized: Invalid user ID' });
+    }
+    const { startDate, endDate } = req.query;
+    const matchQuery = { user: mongoose.Types.ObjectId(req.user.id) };
+
+    if (startDate && endDate) {
+        matchQuery.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    }
+
+    const lenderData = await Borrowing.aggregate([
+        { $match: matchQuery },
+        {
+            $group: {
+                _id: '$from',
+                totalAmount: { $sum: '$amount' },
+                count: { $sum: 1 }
+            }
+        },
+        { $sort: { totalAmount: -1 } }
+    ]);
+
+    res.status(200).json(lenderData);
+  } catch (error) {
+    console.error('Error fetching borrowings by lender:', error);
+    res.status(500).json({ message: 'Error fetching borrowings by lender', error: error.message });
   }
 };
