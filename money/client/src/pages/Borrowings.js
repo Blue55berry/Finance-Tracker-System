@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { borrowingService } from '../services/borrowingServices';
 import BorrowingForm from '../components/expenses/dashboard/borrowings/BorrowingForm';
 // import RepaymentForm from '../components/expenses/dashboard/borrowings/RepaymentForm';
+import RepaymentForm from '../components/expenses/dashboard/borrowings/RepaymentForm';
 import { format } from 'date-fns';
 
 const Borrowings = () => {
@@ -10,30 +11,31 @@ const Borrowings = () => {
   const [error, setError] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editBorrowing, setEditBorrowing] = useState(null);
+  const [repayingBorrowing, setRepayingBorrowing] = useState(null); // New state for repayment
   const [filterStatus, setFilterStatus] = useState('all'); // 'all', 'unpaid', 'repaid'
 
-  useEffect(() => {
-    // Fetch borrowings
-    const fetchBorrowings = async () => {
-      try {
-        setLoading(true);
-        let params = {};
-        
-        if (filterStatus === 'unpaid') {
-          params.isRepaid = false;
-        } else if (filterStatus === 'repaid') {
-          params.isRepaid = true;
-        }
-        
-        const data = await borrowingService.getBorrowings(params.isRepaid);
-        setBorrowings(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+  // Fetch borrowings
+  const fetchBorrowings = async () => {
+    try {
+      setLoading(true);
+      let params = {};
+      
+      if (filterStatus === 'unpaid') {
+        params.isRepaid = false;
+      } else if (filterStatus === 'repaid') {
+        params.isRepaid = true;
       }
-    };
+      
+      const data = await borrowingService.getBorrowings(params.isRepaid);
+      setBorrowings(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchBorrowings();
   }, [filterStatus]);
 
@@ -59,16 +61,16 @@ const Borrowings = () => {
     }
   };
 
-  // const handleRepaymentSubmit = async (repaymentData) => {
-  //   if (!repayingBorrowing) return;
-  //   try {
-  //     await borrowingService.markAsRepaid(repayingBorrowing._id, repaymentData);
-  //     setRepayingBorrowing(null);
-  //     fetchBorrowings();
-  //   } catch (err) {
-  //     setError(err.message);
-  //   }
-  // };
+  const handleRepaymentSubmit = async (repaymentData) => {
+    if (!repayingBorrowing) return;
+    try {
+      await borrowingService.markAsRepaid(repayingBorrowing._id, repaymentData);
+      setRepayingBorrowing(null);
+      fetchBorrowings(); // Refresh borrowings after repayment
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   const handleDeleteBorrowing = async (id) => {
     if (window.confirm('Are you sure you want to delete this borrowing record?')) {
@@ -194,7 +196,14 @@ const Borrowings = () => {
                       )}
                   </div>
                   <div className="flex justify-end items-center gap-2 mt-3 border-t border-gray-100 pt-2">
-                    
+                    {!borrowing.isRepaid && (
+                      <button
+                        onClick={() => setRepayingBorrowing(borrowing)}
+                        className="text-sm font-medium text-green-600 hover:text-green-800"
+                      >
+                        Repay
+                      </button>
+                    )}
                     
                       <button
                         onClick={() => {
@@ -250,7 +259,14 @@ const Borrowings = () => {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        
+                        {!borrowing.isRepaid && (
+                          <button
+                            onClick={() => setRepayingBorrowing(borrowing)}
+                            className="text-green-600 hover:text-green-900 mr-4"
+                          >
+                            Repay
+                          </button>
+                        )}
                         
                         <button
                           onClick={() => {
@@ -278,7 +294,7 @@ const Borrowings = () => {
       </div>
 
       {/* Repayment Modal */}
-      {/* {repayingBorrowing && (
+      {repayingBorrowing && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
             <h2 className="text-xl font-semibold mb-4">Repay Borrowing</h2>
@@ -289,7 +305,7 @@ const Borrowings = () => {
             />
           </div>
         </div>
-      )} */}
+      )}
 
     
     </>

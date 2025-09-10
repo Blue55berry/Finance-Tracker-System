@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { receiptService } from '../services/receiptService';
+import { Link } from 'react-router-dom';
 
 const Receipts = () => {
   const [receipts, setReceipts] = useState([]);
@@ -43,21 +44,24 @@ const Receipts = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {receipts.map(receipt => (
           <div key={receipt._id} className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">{receipt.type} Receipt</h2>
+            <h2 className="text-xl font-semibold mb-4">{receipt.transactionType} Receipt</h2>
             <p><strong>Amount:</strong> ₹{receipt.amount.toFixed(2)}</p>
             <p><strong>Date:</strong> {new Date(receipt.date).toLocaleDateString()}</p>
-            <p><strong>Description:</strong> {receipt.description}</p>
-            {receipt.type === 'Borrowing' && (
+            <p><strong>Description:</strong> {receipt.description || 'N/A'}</p>
+            {receipt.transactionType === 'Borrowing' && (
               <>
-                <p><strong>Repay Date:</strong> {new Date(receipt.repayDate).toLocaleDateString()}</p>
-                <p><strong>Payment Method:</strong> {receipt.paymentMethod}</p>
-                {receipt.proof && (
-                  <div className="mt-4">
-                    <p><strong>Proof of Payment:</strong></p>
-                    <img src={`http://localhost:5000/${receipt.proof}`} alt="Proof" className="max-w-full h-auto rounded" />
-                  </div>
-                )}
+                <p><strong>Repay Date:</strong> {receipt.repayDate ? new Date(receipt.repayDate).toLocaleDateString() : 'N/A'}</p>
+                <p><strong>Payment Method:</strong> {receipt.paymentMethod || 'N/A'}</p>
               </>
+            )}
+            {receipt.proof && (
+              <div className="mt-4">
+                <p><strong>Proof of Payment:</strong></p>
+                <img src={`http://localhost:5000/${receipt.proof}`} alt="Proof" className="max-w-full h-auto rounded" />
+                <Link to={`/receipts/${receipt._id}`} className="block mt-2 text-blue-600 hover:underline">
+                  View Details
+                </Link>
+              </div>
             )}
           </div>
         ))}

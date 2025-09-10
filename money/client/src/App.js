@@ -12,6 +12,7 @@ import Settings from './pages/Settings';
 import Income from './pages/Income';
 import Receipts from './pages/Receipts';
 import MainLayout from './layouts/MainLayout';
+import ProofDetails from './components/ProofDetails';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
               <Route path="/settings" element={<Settings />} />
               <Route path="/income" element={<Income />} />
               <Route path="/receipts" element={<Receipts />} />
+              <Route path="/receipts/:id" element={<ProofDetails />} />
             </Route>
           </Route>
         </Routes>
