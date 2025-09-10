@@ -114,7 +114,7 @@ const Analytics = () => {
       }
 
       if (recentExpensesResult.status === 'fulfilled' && recentBorrowingsResult.status === 'fulfilled') {
-        const recentExpenses = recentExpensesResult.value.map(e => ({ ...e, type: 'expense' }));
+        const recentExpenses = recentExpensesResult.value.expenses.map(e => ({ ...e, type: 'expense' }));
         const recentBorrowings = recentBorrowingsResult.value.map(b => ({ ...b, type: 'borrowing' }));
         const combined = [...recentExpenses, ...recentBorrowings];
         combined.sort((a, b) => new Date(b.date) - new Date(a.date));
